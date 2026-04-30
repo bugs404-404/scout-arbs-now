@@ -1,26 +1,45 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { ConnectivityBanner } from "@/components/dashboard/connectivity-banner";
+import { BankrollDonut } from "@/components/dashboard/bankroll-donut";
+import { TodaysMetrics } from "@/components/dashboard/todays-metrics";
+import { ProfitChart } from "@/components/dashboard/profit-chart";
+import { LiveArbsTable } from "@/components/dashboard/live-arbs-table";
+
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Dashboard — ArbScout" },
+      {
+        name: "description",
+        content:
+          "Overview of your arbitrage performance: bankroll distribution, daily metrics, 30-day profit trend and live opportunities.",
+      },
+    ],
+  }),
+  component: DashboardPage,
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
+function DashboardPage() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-5">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
+          A snapshot of your arbitrage activity across all connected
+          bookmakers.
+        </p>
+      </div>
+
+      <ConnectivityBanner />
+
+      <div className="grid gap-5 lg:grid-cols-3">
+        <BankrollDonut />
+        <TodaysMetrics />
+        <ProfitChart />
+      </div>
+
+      <LiveArbsTable />
     </div>
   );
-}
-
-function Index() {
-  return <PlaceholderIndex />;
 }
