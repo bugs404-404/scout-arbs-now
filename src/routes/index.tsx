@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ConnectivityBanner } from "@/components/dashboard/connectivity-banner";
-import { BankrollDonut } from "@/components/dashboard/bankroll-donut";
+import { BankrollAllocation } from "@/components/dashboard/bankroll-allocation";
 import { TodaysMetrics } from "@/components/dashboard/todays-metrics";
 import { ProfitChart } from "@/components/dashboard/profit-chart";
 import { LiveArbsTable } from "@/components/dashboard/live-arbs-table";
@@ -34,7 +34,7 @@ function DashboardPage() {
       <ConnectivityBanner />
 
       <div className="grid gap-5 lg:grid-cols-3">
-        <BankrollDonut />
+        <BankrollAllocation />
         <TodaysMetrics />
         <ProfitChart />
       </div>

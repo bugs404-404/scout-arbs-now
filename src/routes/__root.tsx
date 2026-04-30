@@ -11,6 +11,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { TopNavbar } from "@/components/top-navbar";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 function NotFoundComponent() {
   return (
@@ -84,6 +85,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="en" className="dark">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('arbscout-theme');if(t==='light'){document.documentElement.classList.remove('dark')}}catch(e){}})();`,
+          }}
+        />
       </head>
       <body>
         {children}
@@ -95,17 +101,19 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <TopNavbar />
-          <main className="flex-1 p-4 md:p-6">
-            <Outlet />
-          </main>
+    <ThemeProvider>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-background">
+          <AppSidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <TopNavbar />
+            <main className="flex-1 p-4 md:p-6">
+              <Outlet />
+            </main>
+          </div>
         </div>
-      </div>
-      <Toaster />
-    </SidebarProvider>
+        <Toaster />
+      </SidebarProvider>
+    </ThemeProvider>
   );
 }

@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { bankroll, todaysMetrics } from "@/lib/mock-data";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function formatUsd(n: number) {
   return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
@@ -74,6 +75,8 @@ export function TopNavbar() {
             className="h-9 w-64 pl-9"
           />
         </div>
+
+        <ThemeToggle />
 
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-border bg-card px-1.5 py-1 pr-2 text-sm transition hover:bg-accent">
