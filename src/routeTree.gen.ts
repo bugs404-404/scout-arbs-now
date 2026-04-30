@@ -9,8 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LiveArbsRouteImport } from './routes/live-arbs'
+import { Route as CalculatorsRouteImport } from './routes/calculators'
+import { Route as BookmakersRouteImport } from './routes/bookmakers'
+import { Route as BetTrackerRouteImport } from './routes/bet-tracker'
 import { Route as IndexRouteImport } from './routes/index'
 
+const LiveArbsRoute = LiveArbsRouteImport.update({
+  id: '/live-arbs',
+  path: '/live-arbs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalculatorsRoute = CalculatorsRouteImport.update({
+  id: '/calculators',
+  path: '/calculators',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookmakersRoute = BookmakersRouteImport.update({
+  id: '/bookmakers',
+  path: '/bookmakers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BetTrackerRoute = BetTrackerRouteImport.update({
+  id: '/bet-tracker',
+  path: '/bet-tracker',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +43,83 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bet-tracker': typeof BetTrackerRoute
+  '/bookmakers': typeof BookmakersRoute
+  '/calculators': typeof CalculatorsRoute
+  '/live-arbs': typeof LiveArbsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bet-tracker': typeof BetTrackerRoute
+  '/bookmakers': typeof BookmakersRoute
+  '/calculators': typeof CalculatorsRoute
+  '/live-arbs': typeof LiveArbsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bet-tracker': typeof BetTrackerRoute
+  '/bookmakers': typeof BookmakersRoute
+  '/calculators': typeof CalculatorsRoute
+  '/live-arbs': typeof LiveArbsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/bet-tracker'
+    | '/bookmakers'
+    | '/calculators'
+    | '/live-arbs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/bet-tracker' | '/bookmakers' | '/calculators' | '/live-arbs'
+  id:
+    | '__root__'
+    | '/'
+    | '/bet-tracker'
+    | '/bookmakers'
+    | '/calculators'
+    | '/live-arbs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BetTrackerRoute: typeof BetTrackerRoute
+  BookmakersRoute: typeof BookmakersRoute
+  CalculatorsRoute: typeof CalculatorsRoute
+  LiveArbsRoute: typeof LiveArbsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/live-arbs': {
+      id: '/live-arbs'
+      path: '/live-arbs'
+      fullPath: '/live-arbs'
+      preLoaderRoute: typeof LiveArbsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calculators': {
+      id: '/calculators'
+      path: '/calculators'
+      fullPath: '/calculators'
+      preLoaderRoute: typeof CalculatorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookmakers': {
+      id: '/bookmakers'
+      path: '/bookmakers'
+      fullPath: '/bookmakers'
+      preLoaderRoute: typeof BookmakersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bet-tracker': {
+      id: '/bet-tracker'
+      path: '/bet-tracker'
+      fullPath: '/bet-tracker'
+      preLoaderRoute: typeof BetTrackerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +132,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BetTrackerRoute: BetTrackerRoute,
+  BookmakersRoute: BookmakersRoute,
+  CalculatorsRoute: CalculatorsRoute,
+  LiveArbsRoute: LiveArbsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
