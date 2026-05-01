@@ -60,6 +60,13 @@ export const Route = createRootRoute({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:title", content: "ArbScout — Arbitrage Betting Dashboard" },
+      { name: "twitter:title", content: "ArbScout — Arbitrage Betting Dashboard" },
+      { name: "description", content: "ArbMate Dashboard is a web application for arbitrage bettors to track bankroll, find live arb opportunities, and analyze performance." },
+      { property: "og:description", content: "ArbMate Dashboard is a web application for arbitrage bettors to track bankroll, find live arb opportunities, and analyze performance." },
+      { name: "twitter:description", content: "ArbMate Dashboard is a web application for arbitrage bettors to track bankroll, find live arb opportunities, and analyze performance." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ca96973a-0a03-489e-bafd-d92faedef1b7/id-preview-0ca84c01--29ee157a-ede3-4109-9255-30fced66ebc3.lovable.app-1777597788121.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ca96973a-0a03-489e-bafd-d92faedef1b7/id-preview-0ca84c01--29ee157a-ede3-4109-9255-30fced66ebc3.lovable.app-1777597788121.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
