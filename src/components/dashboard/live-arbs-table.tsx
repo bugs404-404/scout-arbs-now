@@ -129,13 +129,13 @@ export function LiveArbsTable() {
                   <TableCell>
                     <div className="text-sm font-medium">{arb.book1.name}</div>
                     <div className="text-xs text-muted-foreground tabular-nums">
-                      @ {arb.book1.odds.toFixed(2)} · ${stake1}
+                      @ {arb.book1.odds.toFixed(2)} · TSh {stake1}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm font-medium">{arb.book2.name}</div>
                     <div className="text-xs text-muted-foreground tabular-nums">
-                      @ {arb.book2.odds.toFixed(2)} · ${stake2}
+                      @ {arb.book2.odds.toFixed(2)} · TSh {stake2}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">

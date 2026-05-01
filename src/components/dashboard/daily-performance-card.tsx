@@ -29,11 +29,7 @@ import { toast } from "sonner";
 import { DailyRecapDialog } from "./daily-recap-dialog";
 
 function formatUSD(n: number) {
-  return n.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
+  return `TSh ${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 }
 
 export function DailyPerformanceCard() {
