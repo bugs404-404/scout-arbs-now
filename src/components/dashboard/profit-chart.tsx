@@ -12,7 +12,7 @@ const config = {
 } satisfies ChartConfig;
 
 export function ProfitChart() {
-  const total = profitSeries.reduce((acc, p) => acc + p.profit, 0);
+  const total = profitSeries[profitSeries.length - 1]?.profit ?? 0;
 
   return (
     <div className="flex h-full flex-col rounded-xl border border-border bg-card p-5">
@@ -69,12 +69,16 @@ export function ProfitChart() {
               cursor={{ stroke: "var(--primary)", strokeOpacity: 0.3 }}
               content={<ChartTooltipContent indicator="line" />}
             />
+            <ReferenceLine y={0} stroke="var(--border)" strokeDasharray="2 2" />
             <Area
-              type="monotone"
+              type="linear"
               dataKey="profit"
               stroke="var(--color-profit)"
               strokeWidth={2}
               fill="url(#profitFill)"
+              dot={{ r: 2.5, fill: "var(--color-profit)", strokeWidth: 0 }}
+              activeDot={{ r: 4, fill: "var(--color-profit)" }}
+              isAnimationActive={false}
             />
           </AreaChart>
         </ChartContainer>
