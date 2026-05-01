@@ -4,11 +4,7 @@ import { ArrowUpRight, Sparkles, Trophy, Target, TrendingUp } from "lucide-react
 import { dailyPerformance, intradaySeries } from "@/lib/mock-data";
 
 function formatUSD(n: number) {
-  return n.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
+  return `TSh ${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 }
 
 interface Props {
