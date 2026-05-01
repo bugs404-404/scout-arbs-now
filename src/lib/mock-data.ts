@@ -108,12 +108,46 @@ export const todaysMetrics = {
   bankroll24hDelta: 1.13,
 };
 
-export const profitSeries = Array.from({ length: 30 }, (_, i) => {
-  // Smoothly increasing series with small noise
-  const base = 200 + i * 22;
-  const wobble = Math.sin(i / 2) * 60 + Math.cos(i / 3) * 40;
+// Realistic zigzag daily P&L — losing days included, mean-reverting trend up.
+const dailySteps = [
+  120, 245, -80, 310, 90, -140, 420, 180, -60, 360, 510, -210, 280, 470, 130,
+  -90, 540, 320, 80, -180, 610, 240, 460, -120, 380, 620, 290, -70, 540, 720,
+];
+let _running = 0;
+export const profitSeries = dailySteps.map((delta, i) => {
+  _running += delta;
   return {
     day: `D${i + 1}`,
-    profit: Math.round(base + wobble),
+    profit: _running,
+    delta,
   };
 });
+
+// Today's intraday performance (hourly P&L), realistic zigzag.
+export const intradaySeries = [
+  { hour: "00:00", profit: 0, bets: 0 },
+  { hour: "02:00", profit: 18, bets: 2 },
+  { hour: "04:00", profit: 12, bets: 3 },
+  { hour: "06:00", profit: 45, bets: 5 },
+  { hour: "08:00", profit: 28, bets: 7 },
+  { hour: "10:00", profit: 92, bets: 11 },
+  { hour: "12:00", profit: 74, bets: 14 },
+  { hour: "14:00", profit: 156, bets: 18 },
+  { hour: "16:00", profit: 132, bets: 22 },
+  { hour: "18:00", profit: 248, bets: 27 },
+  { hour: "20:00", profit: 312, bets: 31 },
+  { hour: "22:00", profit: 412, bets: 36 },
+];
+
+export const dailyPerformance = {
+  date: new Date().toISOString().slice(0, 10),
+  netProfit: 412.55,
+  roi: 3.31,
+  turnover: 12480,
+  betsPlaced: 36,
+  winRate: 86.1,
+  bestArb: { event: "Chiefs vs Bills", percent: 4.08, profit: 61.2 },
+  worstArb: { event: "Rangers vs Bruins", percent: 1.42, profit: 5.7 },
+  topBookmaker: "Pinnacle",
+  hoursActive: 7.5,
+};
