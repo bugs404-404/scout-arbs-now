@@ -16,7 +16,7 @@ import { bankroll, todaysMetrics } from "@/lib/mock-data";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 function formatUsd(n: number) {
-  return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  return `TSh ${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 }
 
 function QuickStat({
@@ -82,10 +82,10 @@ export function TopNavbar() {
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-border bg-card px-1.5 py-1 pr-2 text-sm transition hover:bg-accent">
             <Avatar className="h-7 w-7">
               <AvatarFallback className="bg-primary text-xs text-primary-foreground">
-                AS
+                CH
               </AvatarFallback>
             </Avatar>
-            <span className="hidden font-medium sm:inline">Alex Stone</span>
+            <span className="hidden font-medium sm:inline">Charlz</span>
             <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

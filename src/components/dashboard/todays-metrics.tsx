@@ -2,7 +2,7 @@ import { ArrowUpRight, DollarSign, TrendingUp } from "lucide-react";
 import { todaysMetrics } from "@/lib/mock-data";
 
 function fmt(n: number) {
-  return `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  return `TSh ${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 }
 
 function Stat({
