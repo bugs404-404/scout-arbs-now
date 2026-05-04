@@ -11,9 +11,12 @@
  *   WS   /ws/arbs   (handled in hooks/useArbStream)
  */
 
-const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined) ??
-  "http://192.168.100.144:8000";
+// Empty string = same-origin. Nginx in the dashboard container reverse-
+// proxies /api/* and /ws/* to the backend, so the browser never has to
+// know the backend host. This makes the build portable: works on
+// localhost:3000, LAN 192.168.100.144:3000, AND any public Cloudflare-
+// Tunnel hostname pointing at port 3000 — no rebuild required.
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
 
 /* ---------- raw backend payloads (snake_case) ---------- */
 
@@ -139,6 +142,12 @@ export const api = {
   },
 };
 
+// WebSocket URL: derive from the current page origin so it follows scheme
+// (ws ↔ wss) and host automatically. Override with VITE_WS_URL if needed.
+function defaultWsUrl(): string {
+  if (typeof window === "undefined") return "";
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}/ws/arbs`;
+}
 export const WS_URL =
-  (import.meta.env.VITE_WS_URL as string | undefined) ??
-  "ws://192.168.100.144:8000/ws/arbs";
+  (import.meta.env.VITE_WS_URL as string | undefined) ?? defaultWsUrl();
