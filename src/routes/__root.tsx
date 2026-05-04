@@ -2,11 +2,10 @@ import {
   Outlet,
   Link,
   createRootRoute,
-  HeadContent,
-  Scripts,
 } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 
-import appCss from "../styles.css?url";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { TopNavbar } from "@/components/top-navbar";
@@ -38,89 +37,39 @@ function NotFoundComponent() {
 }
 
 export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ArbScout — Arbitrage Betting Dashboard" },
-      {
-        name: "description",
-        content:
-          "Track bankroll across bookmakers, spot live arbitrage opportunities, and analyze your betting performance in one professional dashboard.",
-      },
-      { name: "author", content: "ArbScout" },
-      {
-        property: "og:title",
-        content: "ArbScout — Arbitrage Betting Dashboard",
-      },
-      {
-        property: "og:description",
-        content:
-          "Live arbitrage opportunities, bankroll tracking and performance analytics for professional bettors.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { property: "og:title", content: "ArbScout — Arbitrage Betting Dashboard" },
-      { name: "twitter:title", content: "ArbScout — Arbitrage Betting Dashboard" },
-      { name: "description", content: "ArbMate Dashboard is a web application for arbitrage bettors to track bankroll, find live arb opportunities, and analyze performance." },
-      { property: "og:description", content: "ArbMate Dashboard is a web application for arbitrage bettors to track bankroll, find live arb opportunities, and analyze performance." },
-      { name: "twitter:description", content: "ArbMate Dashboard is a web application for arbitrage bettors to track bankroll, find live arb opportunities, and analyze performance." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ca96973a-0a03-489e-bafd-d92faedef1b7/id-preview-0ca84c01--29ee157a-ede3-4109-9255-30fced66ebc3.lovable.app-1777597788121.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ca96973a-0a03-489e-bafd-d92faedef1b7/id-preview-0ca84c01--29ee157a-ede3-4109-9255-30fced66ebc3.lovable.app-1777597788121.png" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
-      },
-    ],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
 });
 
-function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en" className="dark">
-      <head>
-        <HeadContent />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('arbscout-theme');if(t==='light'){document.documentElement.classList.remove('dark')}}catch(e){}})();`,
-          }}
-        />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
 function RootComponent() {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 5_000,
+            refetchOnWindowFocus: false,
+            retry: 1,
+          },
+        },
+      }),
+  );
   return (
-    <ThemeProvider>
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background">
-          <AppSidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <TopNavbar />
-            <main className="flex-1 p-4 md:p-6">
-              <Outlet />
-            </main>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full bg-background">
+            <AppSidebar />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <TopNavbar />
+              <main className="flex-1 p-4 md:p-6">
+                <Outlet />
+              </main>
+            </div>
           </div>
-        </div>
-        <Toaster />
-      </SidebarProvider>
-    </ThemeProvider>
+          <Toaster />
+        </SidebarProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

@@ -18,7 +18,9 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { liveArbs, type ArbOpportunity, type Sport } from "@/lib/mock-data";
+import { type ArbOpportunity, type Sport } from "@/lib/mock-data";
+import { useArbs } from "@/hooks/useArbs";
+import { useArbStream } from "@/hooks/useArbStream";
 import { ArbCalculatorDialog } from "./arb-calculator-dialog";
 
 const sportIcon: Record<Sport, typeof Trophy> = {
@@ -36,13 +38,16 @@ export function LiveArbsTable() {
   const [selected, setSelected] = useState<ArbOpportunity | null>(null);
   const [open, setOpen] = useState(false);
 
+  const { arbs, isLoading, error } = useArbs({ hours: 24, limit: 100 });
+  const { status: wsStatus } = useArbStream();
+
   const rows = useMemo(() => {
     if (filter === "pre")
-      return liveArbs.filter((a) => a.status === "Pre-match");
+      return arbs.filter((a) => a.status === "Pre-match");
     if (filter === "live")
-      return liveArbs.filter((a) => a.status === "In-Play");
-    return liveArbs;
-  }, [filter]);
+      return arbs.filter((a) => a.status === "In-Play");
+    return arbs;
+  }, [filter, arbs]);
 
   return (
     <div className="rounded-xl border border-border bg-card">
@@ -50,12 +55,25 @@ export function LiveArbsTable() {
         <div>
           <h3 className="text-sm font-semibold">
             Live Arbs{" "}
-            <span className="ml-1 text-muted-foreground">
-              ({liveArbs.length})
-            </span>
+            <span className="ml-1 text-muted-foreground">({arbs.length})</span>
+            <span
+              className={
+                "ml-2 inline-block h-1.5 w-1.5 rounded-full " +
+                (wsStatus === "open"
+                  ? "bg-success"
+                  : wsStatus === "connecting"
+                    ? "bg-warning animate-pulse"
+                    : "bg-destructive")
+              }
+              aria-label={`WS ${wsStatus}`}
+            />
           </h3>
           <p className="text-xs text-muted-foreground">
-            Real-time arbitrage opportunities across connected bookmakers
+            {isLoading
+              ? "Loading…"
+              : error
+                ? `API error: ${(error as Error).message}`
+                : "Real-time arbitrage opportunities across connected bookmakers"}
           </p>
         </div>
         <Tabs
