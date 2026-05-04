@@ -5,14 +5,21 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { profitSeries } from "@/lib/mock-data";
+import { useHistory } from "@/hooks/useHistory";
+import { fmtMoney } from "@/lib/format";
 
 const config = {
-  profit: { label: "Profit", color: "var(--chart-1)" },
+  cumulative: { label: "Cumulative profit", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
 export function ProfitChart() {
-  const total = profitSeries[profitSeries.length - 1]?.profit ?? 0;
+  const { data, isLoading } = useHistory(30);
+  const series = (data ?? []).map((d) => ({
+    day: d.date.slice(5),       // MM-DD
+    cumulative: d.cumulative,
+    arbs: d.arb_count,
+  }));
+  const total = series.length > 0 ? series[series.length - 1].cumulative : 0;
 
   return (
     <div className="flex h-full flex-col rounded-xl border border-border bg-card p-5">
@@ -20,12 +27,12 @@ export function ProfitChart() {
         <div>
           <h3 className="text-sm font-semibold">30-Day Profitability</h3>
           <p className="text-xs text-muted-foreground">
-            Cumulative arbitrage profit
+            {isLoading ? "Loading…" : "Cumulative arbitrage profit"}
           </p>
         </div>
         <div className="text-right">
           <div className="text-xl font-semibold tabular-nums text-primary">
-            ${total.toLocaleString("en-US")}
+            {fmtMoney(total)}
           </div>
           <div className="text-[11px] text-muted-foreground">last 30 days</div>
         </div>
@@ -34,35 +41,23 @@ export function ProfitChart() {
       <div className="mt-2 flex-1">
         <ChartContainer config={config} className="h-[180px] w-full">
           <AreaChart
-            data={profitSeries}
+            data={series}
             margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id="profitFill" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="0%"
-                  stopColor="var(--color-profit)"
-                  stopOpacity={0.4}
-                />
-                <stop
-                  offset="100%"
-                  stopColor="var(--color-profit)"
-                  stopOpacity={0}
-                />
+                <stop offset="0%" stopColor="var(--color-cumulative)" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="var(--color-cumulative)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid
-              vertical={false}
-              stroke="var(--border)"
-              strokeDasharray="3 3"
-            />
+            <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
             <XAxis
               dataKey="day"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
               tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
-              interval={4}
+              interval={Math.max(0, Math.floor(series.length / 6))}
             />
             <YAxis hide />
             <ChartTooltip
@@ -72,16 +67,21 @@ export function ProfitChart() {
             <ReferenceLine y={0} stroke="var(--border)" strokeDasharray="2 2" />
             <Area
               type="linear"
-              dataKey="profit"
-              stroke="var(--color-profit)"
+              dataKey="cumulative"
+              stroke="var(--color-cumulative)"
               strokeWidth={2}
               fill="url(#profitFill)"
-              dot={{ r: 2.5, fill: "var(--color-profit)", strokeWidth: 0 }}
-              activeDot={{ r: 4, fill: "var(--color-profit)" }}
+              dot={{ r: 2.5, fill: "var(--color-cumulative)", strokeWidth: 0 }}
+              activeDot={{ r: 4, fill: "var(--color-cumulative)" }}
               isAnimationActive={false}
             />
           </AreaChart>
         </ChartContainer>
+        {!isLoading && series.length === 0 && (
+          <div className="mt-4 text-center text-xs text-muted-foreground">
+            No arbs detected in the last 30 days yet.
+          </div>
+        )}
       </div>
     </div>
   );

@@ -12,12 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { bankroll, todaysMetrics } from "@/lib/mock-data";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-function formatUsd(n: number) {
-  return `TSh ${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-}
+import { useCapital } from "@/hooks/useCapital";
+import { useStats } from "@/hooks/useStats";
+import { fmtMoney } from "@/lib/format";
 
 function QuickStat({
   label,
@@ -47,22 +45,21 @@ function QuickStat({
 }
 
 export function TopNavbar() {
+  const { capital } = useCapital();
+  const { data: stats } = useStats(24);
+  const profit24h = stats?.summary.total_potential_profit ?? 0;
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-3 backdrop-blur md:px-5">
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-6" />
 
       <div className="flex items-center gap-5">
-        <QuickStat
-          label="Total Bankroll"
-          value={formatUsd(bankroll.total)}
-          delta={todaysMetrics.bankroll24hDelta}
-        />
+        <QuickStat label="Per-Arb Capital" value={fmtMoney(capital)} />
         <Separator orientation="vertical" className="hidden h-8 sm:block" />
         <QuickStat
-          label="24h Profit"
-          value={`+${formatUsd(todaysMetrics.bankroll24h)}`}
-          delta={todaysMetrics.arbProfitDelta}
+          label="24h Potential Profit"
+          value={`+${fmtMoney(profit24h)}`}
         />
       </div>
 

@@ -79,6 +79,25 @@ export interface RawLiveEvent {
   age_sec: number;
 }
 
+export interface RawHistoryDay {
+  date: string;            // ISO YYYY-MM-DD
+  arb_count: number;
+  avg_margin_pct: number;
+  potential_profit: number;
+  cumulative: number;
+}
+
+export interface RawBookmaker {
+  book_id: string;
+  snaps_1h: number;
+  last_seen: string | null;
+  age_sec: number;
+  status: "ok" | "stale" | "down";
+  event_count: number;
+  arb_count: number;
+  total_staked: number;
+}
+
 /* ---------- helpers ---------- */
 
 async function fetchJSON<T>(
@@ -108,6 +127,8 @@ export const api = {
   },
   stats: (hours = 24) => fetchJSON<RawStats>(`/api/stats?hours=${hours}`),
   live: () => fetchJSON<RawLiveEvent[]>(`/api/live`),
+  history: (days = 30) => fetchJSON<RawHistoryDay[]>(`/api/history?days=${days}`),
+  bookmakers: (hours = 24) => fetchJSON<RawBookmaker[]>(`/api/bookmakers?hours=${hours}`),
   capital: {
     get: () => fetchJSON<{ capital: number }>(`/api/capital`),
     set: (capital: number) =>

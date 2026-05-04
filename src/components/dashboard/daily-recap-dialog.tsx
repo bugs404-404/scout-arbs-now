@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { DailyRecapTicket } from "./daily-recap-ticket";
-import { dailyPerformance } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 interface Props {
@@ -35,7 +34,7 @@ export function DailyRecapDialog({ trigger }: Props) {
         backgroundColor: "transparent",
       });
       const link = document.createElement("a");
-      link.download = `arbscout-recap-${dailyPerformance.date}.png`;
+      link.download = `arbscout-recap-${new Date().toISOString().slice(0, 10)}.png`;
       link.href = dataUrl;
       link.click();
       toast.success("Ticket downloaded");
