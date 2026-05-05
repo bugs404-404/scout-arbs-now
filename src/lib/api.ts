@@ -11,12 +11,13 @@
  *   WS   /ws/arbs   (handled in hooks/useArbStream)
  */
 
-// Empty string = same-origin. Nginx in the dashboard container reverse-
-// proxies /api/* and /ws/* to the backend, so the browser never has to
-// know the backend host. This makes the build portable: works on
-// localhost:3000, LAN 192.168.100.144:3000, AND any public Cloudflare-
-// Tunnel hostname pointing at port 3000 — no rebuild required.
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
+// Empty string / undefined = same-origin. Nginx in the dashboard
+// container reverse-proxies /api/* and /ws/* to the backend, so the
+// browser never has to know the backend host. This makes the build
+// portable: works on localhost:3000, LAN 192.168.100.144:3000, AND any
+// public Cloudflare-Tunnel hostname pointing at port 3000 — no rebuild.
+const _RAW_API = import.meta.env.VITE_API_URL as string | undefined;
+const API_URL = _RAW_API && _RAW_API.length > 0 ? _RAW_API : "";
 
 /* ---------- raw backend payloads (snake_case) ---------- */
 
@@ -149,5 +150,5 @@ function defaultWsUrl(): string {
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${proto}//${window.location.host}/ws/arbs`;
 }
-export const WS_URL =
-  (import.meta.env.VITE_WS_URL as string | undefined) ?? defaultWsUrl();
+const _RAW_WS = import.meta.env.VITE_WS_URL as string | undefined;
+export const WS_URL = _RAW_WS && _RAW_WS.length > 0 ? _RAW_WS : defaultWsUrl();
