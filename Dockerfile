@@ -1,14 +1,17 @@
 # Multi-stage: node 20 builds the SPA, nginx alpine serves the static dist.
-# VITE_API_URL / VITE_WS_URL are baked in at build time — pass them via
-# --build-arg or compose build.args so the bundled JS targets the right
-# backend.
+#
+# DEFAULTS = empty so the SPA uses same-origin URLs (api.ts derives WS from
+# window.location, REST from "" prefix → relative to current page). This
+# makes the image portable across LAN / public tunnel / any hostname with
+# zero rebuilds. Override by passing build args ONLY if you have a reason
+# to point the bundle at a different backend host:
+#   docker build --build-arg VITE_API_URL=https://api.example.com .
 
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Build args injected by docker compose / docker build --build-arg
-ARG VITE_API_URL=http://192.168.100.144:8000
-ARG VITE_WS_URL=ws://192.168.100.144:8000/ws/arbs
+ARG VITE_API_URL=
+ARG VITE_WS_URL=
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_WS_URL=$VITE_WS_URL
 
