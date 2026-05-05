@@ -1,7 +1,7 @@
 /**
  * Typed REST client for the FastAPI arb backend.
  *
- * Backend is at VITE_API_URL (default http://192.168.100.144:8000).
+ * Backend URL = VITE_API_URL or same-origin (empty string).
  * Endpoints:
  *   GET  /api/arbs?limit=50&hours=24&status=all
  *   GET  /api/stats?hours=24
@@ -14,8 +14,8 @@
 // Empty string / undefined = same-origin. Nginx in the dashboard
 // container reverse-proxies /api/* and /ws/* to the backend, so the
 // browser never has to know the backend host. This makes the build
-// portable: works on localhost:3000, LAN 192.168.100.144:3000, AND any
-// public Cloudflare-Tunnel hostname pointing at port 3000 — no rebuild.
+// portable: works on localhost, LAN, AND any public tunnel hostname
+// pointing at port 3000 — no rebuild required.
 const _RAW_API = import.meta.env.VITE_API_URL as string | undefined;
 const API_URL = _RAW_API && _RAW_API.length > 0 ? _RAW_API : "";
 
