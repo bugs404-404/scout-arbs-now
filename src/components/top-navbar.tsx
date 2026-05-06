@@ -1,4 +1,5 @@
-import { Search, ArrowUpRight, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { Search, ArrowUpRight, ChevronDown, Zap, ZapOff } from "lucide-react";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -12,9 +13,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useCapital } from "@/hooks/useCapital";
 import { useStats } from "@/hooks/useStats";
+import { useAutoBet } from "@/hooks/useAutoBet";
 import { fmtMoney } from "@/lib/format";
 
 function QuickStat({
@@ -48,6 +61,8 @@ export function TopNavbar() {
   const { capital } = useCapital();
   const { data: stats } = useStats(24);
   const profit24h = stats?.summary.total_potential_profit ?? 0;
+  const autoBet = useAutoBet();
+  const [confirmOn, setConfirmOn] = useState(false);
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-3 backdrop-blur md:px-5">
@@ -64,6 +79,59 @@ export function TopNavbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-3">
+        {/* Auto-bet toggle. ON = bet executor places real money on every
+            fresh arb alert. Confirmation gate before turning ON. */}
+        <div
+          className={
+            "flex items-center gap-2 rounded-md border px-2.5 py-1 transition " +
+            (autoBet.enabled
+              ? "border-success/40 bg-success/10 text-success"
+              : "border-border bg-card text-muted-foreground")
+          }
+          title={autoBet.enabled
+            ? "Auto-bet ON: real money wagers on each fresh arb"
+            : "Auto-bet OFF: dashboard shows arbs but no bets are placed"}
+        >
+          {autoBet.enabled ? <Zap className="h-3.5 w-3.5" /> : <ZapOff className="h-3.5 w-3.5" />}
+          <span className="text-[11px] font-medium uppercase tracking-wider">
+            Auto-bet
+          </span>
+          <Switch
+            checked={autoBet.enabled}
+            disabled={autoBet.pending}
+            onCheckedChange={(v) => {
+              if (v) setConfirmOn(true);
+              else autoBet.set(false);
+            }}
+          />
+        </div>
+
+        <AlertDialog open={confirmOn} onOpenChange={setConfirmOn}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Enable auto-bet?</AlertDialogTitle>
+              <AlertDialogDescription>
+                When enabled, every fresh arb alert is sent to the betting
+                executor and real-money tickets are placed at the linked
+                bookmakers. Make sure the executor is running with real
+                credentials and AUTO_BET_DRY_RUN=0 for actual stakes —
+                otherwise it will only log dry-run intents.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  autoBet.set(true);
+                  setConfirmOn(false);
+                }}
+              >
+                Yes, enable
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <div className="relative hidden md:block">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

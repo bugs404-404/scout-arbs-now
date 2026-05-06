@@ -30,6 +30,7 @@ export interface UiLeg {
 }
 
 export interface UiArb extends ArbOpportunity {
+  eventId: number | null;
   legs: UiLeg[];
   league: string;
   country: string;
@@ -61,6 +62,7 @@ export function transformArb(raw: RawArb): UiArb {
 
   return {
     id: String(raw.id),
+    eventId: typeof raw.event_id === "number" ? raw.event_id : null,
     sport: toSport(raw.sport),
     event: `${raw.home} vs ${raw.away}`,
     market: raw.market,
