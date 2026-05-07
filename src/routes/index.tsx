@@ -6,6 +6,7 @@ import { TodaysMetrics } from "@/components/dashboard/todays-metrics";
 import { ProfitChart } from "@/components/dashboard/profit-chart";
 import { LiveArbsTable } from "@/components/dashboard/live-arbs-table";
 import { DailyPerformanceCard } from "@/components/dashboard/daily-performance-card";
+import { AutoBetToggle } from "@/components/dashboard/auto-bet-toggle";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,6 +34,8 @@ function DashboardPage() {
       </div>
 
       <ConnectivityBanner />
+
+      <AutoBetToggle />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <BankrollAllocation />

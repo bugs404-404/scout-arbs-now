@@ -92,6 +92,16 @@ export interface RawHistoryDay {
   cumulative: number;
 }
 
+export interface RawScore {
+  event_id: number;
+  book_id?: string;
+  score: string | null;
+  match_time: number | string | null;
+  match_time_extended?: string | null;
+  fetched_at?: string | null;
+  raw: Record<string, unknown> | null;
+}
+
 export interface RawBookmaker {
   book_id: string;
   snaps_1h: number;
@@ -134,6 +144,15 @@ export const api = {
   live: () => fetchJSON<RawLiveEvent[]>(`/api/live`),
   history: (days = 30) => fetchJSON<RawHistoryDay[]>(`/api/history?days=${days}`),
   bookmakers: (hours = 24) => fetchJSON<RawBookmaker[]>(`/api/bookmakers?hours=${hours}`),
+  score: (eventId: number) => fetchJSON<RawScore>(`/api/score/${eventId}`),
+  autoBet: {
+    get: () => fetchJSON<{ enabled: boolean }>(`/api/auto_bet`),
+    set: (enabled: boolean) =>
+      fetchJSON<{ enabled: boolean }>(`/api/auto_bet`, {
+        method: "POST",
+        body: JSON.stringify({ enabled }),
+      }),
+  },
   capital: {
     get: () => fetchJSON<{ capital: number }>(`/api/capital`),
     set: (capital: number) =>
