@@ -54,7 +54,11 @@ export interface RawScraperHealth {
   snaps_1h: number;
   last_seen: string;
   age_sec: number;
-  status: "ok" | "stale";
+  status: "ok" | "stale" | "down";
+  live_age_sec: number | null;
+  prematch_age_sec: number | null;
+  live_snaps_1h: number;
+  prematch_snaps_1h: number;
 }
 
 export interface RawStats {

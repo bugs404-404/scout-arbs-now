@@ -40,16 +40,30 @@ export function ConnectivityBanner() {
               {health.length === 0 ? (
                 "Waiting for scraper health data…"
               ) : (
-                health.map((h, i) => (
-                  <span key={h.book_id} className="mr-3 inline-flex items-center gap-1">
+                health.map((h) => (
+                  <span key={h.book_id} className="mr-4 inline-flex items-center gap-1.5">
                     <span
-                      className={`inline-block h-1.5 w-1.5 rounded-full ${h.status === "ok" ? "bg-success" : "bg-warning"}`}
+                      className={
+                        "inline-block h-1.5 w-1.5 rounded-full " +
+                        (h.status === "ok"
+                          ? "bg-success"
+                          : h.status === "stale"
+                            ? "bg-warning"
+                            : "bg-destructive")
+                      }
                     />
                     <span className="font-mono text-[11px]">{h.book_id}</span>
                     <span className="text-[11px] tabular-nums text-muted-foreground">
-                      {h.snaps_1h.toLocaleString()} snaps/hr · {h.age_sec.toFixed(1)}s ago
+                      live {h.live_snaps_1h?.toLocaleString() ?? 0}
+                      {h.live_age_sec != null
+                        ? ` (${h.live_age_sec.toFixed(0)}s)`
+                        : " (—)"}
+                      {" · "}
+                      pre {h.prematch_snaps_1h?.toLocaleString() ?? 0}
+                      {h.prematch_age_sec != null
+                        ? ` (${h.prematch_age_sec.toFixed(0)}s)`
+                        : " (—)"}
                     </span>
-                    {i < health.length - 1 ? null : null}
                   </span>
                 ))
               )}
