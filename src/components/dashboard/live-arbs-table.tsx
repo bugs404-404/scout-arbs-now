@@ -6,6 +6,7 @@ import {
   Volleyball,
   Snowflake,
   ArrowDown,
+  Clock,
 } from "lucide-react";
 
 import {
@@ -40,6 +41,16 @@ function fmtAge(seconds: number): string {
   if (seconds < 60) return `${Math.max(0, Math.floor(seconds))}s ago`;
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   return `${Math.floor(seconds / 3600)}h ago`;
+}
+
+// Kick-off in Tanzania local time (EAT, +03:00). start_time is UTC ISO.
+function fmtKickoff(iso: string): string {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "";
+  return new Date(t).toLocaleString("en-GB", {
+    timeZone: "Africa/Nairobi",
+    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+  });
 }
 
 function ageColor(seconds: number, isLive: boolean): string {
@@ -158,6 +169,15 @@ export function LiveArbsTable() {
                           </Badge>
                           {arb.status === "In-Play" && (
                             <LiveScoreBadge eventId={arb.eventId} />
+                          )}
+                          {arb.status === "Pre-match" && fmtKickoff(arb.startTime) && (
+                            <Badge
+                              variant="outline"
+                              className="border-border/60 text-muted-foreground gap-1 text-[10px]"
+                            >
+                              <Clock className="h-2.5 w-2.5" />
+                              {fmtKickoff(arb.startTime)}
+                            </Badge>
                           )}
                         </div>
                       </div>

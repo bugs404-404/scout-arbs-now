@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 import { transformArb, type UiArb } from "@/lib/transform";
-import { useArbStream } from "./useArbStream";
+import { useArbStream, onArbClosed } from "./useArbStream";
 
 const KEY = (params: { hours?: number; limit?: number; status?: string }) =>
   ["arbs", params] as const;
@@ -27,17 +27,33 @@ export function useArbs(opts: { hours?: number; limit?: number; status?: string 
     staleTime: 5_000,
   });
 
-  // WS push: prepend any newly-detected arb that matches our window
+  // WS push: UPSERT by stable key. A re-confirmation of an existing arb
+  // updates it in place (fresh odds/margin/detected_at) — no duplicate cards;
+  // a brand-new arb is prepended.
   const { lastArb } = useArbStream();
   useEffect(() => {
     if (!lastArb) return;
     qc.setQueryData<UiArb[]>(KEY(params), (cur) => {
       const cur_ = cur ?? [];
-      // Dedup by id — WS may race with REST refresh
-      if (cur_.some((a) => a.id === lastArb.id)) return cur_;
+      const i = cur_.findIndex((a) => a.id === lastArb.id);
+      if (i >= 0) {
+        const next = [...cur_];
+        next[i] = lastArb;
+        return next;
+      }
       return [lastArb, ...cur_].slice(0, params.limit);
     });
   }, [lastArb, qc, params.hours, params.limit, params.status]);
+
+  // arb_closed: the worker's price-truth sweeper says this edge is gone →
+  // drop the card immediately (don't wait for the 30s refetch / TTL).
+  useEffect(() => {
+    return onArbClosed((key) => {
+      qc.setQueryData<UiArb[]>(KEY(params), (cur) =>
+        (cur ?? []).filter((a) => a.id !== key),
+      );
+    });
+  }, [qc, params.hours, params.limit, params.status]);
 
   // Convenience derived
   const live = useMemo(() => (query.data ?? []).filter((a) => a.status === "In-Play"), [query.data]);

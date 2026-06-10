@@ -21,12 +21,14 @@ interface Bus {
   arb: Set<Listener<UiArb>>;
   stats: Set<Listener<RawStats>>;
   status: Set<Listener<"connecting" | "open" | "closed">>;
+  /** arb_closed: a stable arb `key` whose edge died → remove its card. */
+  closed: Set<Listener<string>>;
 }
 
 let socket: WebSocket | null = null;
 let reconnectTimer: number | null = null;
 let backoffMs = 500;
-const bus: Bus = { arb: new Set(), stats: new Set(), status: new Set() };
+const bus: Bus = { arb: new Set(), stats: new Set(), status: new Set(), closed: new Set() };
 let lastArb: UiArb | null = null;
 let lastStats: RawStats | null = null;
 let lastStatus: "connecting" | "open" | "closed" = "closed";
@@ -76,9 +78,11 @@ function connect() {
           potential_return?: number;
         };
         const raw = msg.data as {
+          key?: string;
           match_id?: string;
           market?: string;
           detected_at?: number | string;
+          start_time?: string;
           profit_pct?: number;
           profit_abs?: number;
           capital?: number;
@@ -103,7 +107,7 @@ function connect() {
             ? new Date(raw.detected_at * 1000).toISOString()
             : (raw.detected_at as string | undefined) ?? new Date().toISOString();
         const synthRaw: RawArb = {
-          id: Math.floor(Math.random() * 1e9), // ws alerts may lack an id; transient
+          id: Math.floor(Math.random() * 1e9), // overridden by the stable key below
           detected_at: detectedIso,
           expires_at: detectedIso,
           status: "detected",
@@ -113,19 +117,27 @@ function connect() {
           market: String(raw.market ?? raw.match_id ?? ""),
           home: raw.home ?? "",
           away: raw.away ?? "",
-          start_time: detectedIso,
+          // REAL kickoff from the alert (UTC ISO). Was wrongly set to the
+          // detect time → prematch cards showed "now" as kick-off.
+          start_time: raw.start_time ?? detectedIso,
           league: raw.league ?? "",
           country: raw.country ?? "",
           sport: raw.sport ?? "football",
           legs: synthLegs,
         };
         const ui = transformArb(synthRaw);
+        // STABLE identity from the worker's arb key → the same arb upserts in
+        // place across re-confirmations (no duplicate cards) and can be removed
+        // on arb_closed. Falls back to the transient id only if key is absent.
+        if (raw.key) ui.id = String(raw.key);
         // Force is_live status from alert payload if present
         if (typeof raw.is_live === "boolean") {
           ui.status = raw.is_live ? "In-Play" : "Pre-match";
         }
         lastArb = ui;
         emit(bus.arb, ui);
+      } else if (msg.type === "arb_closed" && msg.data?.key) {
+        emit(bus.closed, String(msg.data.key));
       } else if (msg.type === "stats" && msg.data) {
         lastStats = msg.data as RawStats;
         emit(bus.stats, lastStats);
@@ -177,6 +189,13 @@ export function useArbStream() {
   }, []);
 
   return { lastArb: arb, status };
+}
+
+/** Subscribe to arb-closed events (stable key). Returns an unsubscribe fn. */
+export function onArbClosed(fn: Listener<string>): () => void {
+  ensureConnected();
+  bus.closed.add(fn);
+  return () => { bus.closed.delete(fn); };
 }
 
 export function useStatsStream() {
