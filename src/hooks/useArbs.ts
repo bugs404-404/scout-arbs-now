@@ -14,7 +14,9 @@ const KEY = (params: { hours?: number; limit?: number; status?: string }) =>
   ["arbs", params] as const;
 
 export function useArbs(opts: { hours?: number; limit?: number; status?: string } = {}) {
-  const params = { hours: opts.hours ?? 24, limit: opts.limit ?? 50, status: opts.status ?? "all" };
+  // default "live" = only arbs whose edge still holds (backend filters status
+  // 'detected' AND not expired). A refresh no longer resurrects dead cards.
+  const params = { hours: opts.hours ?? 24, limit: opts.limit ?? 50, status: opts.status ?? "live" };
   const qc = useQueryClient();
 
   const query = useQuery({
