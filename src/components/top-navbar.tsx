@@ -69,7 +69,7 @@ export function TopNavbar() {
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-6" />
 
-      <div className="flex items-center gap-5">
+      <div className="hidden items-center gap-5 md:flex">
         <QuickStat label="Per-Arb Capital" value={fmtMoney(capital)} />
         <Separator orientation="vertical" className="hidden h-8 sm:block" />
         <QuickStat
@@ -78,7 +78,7 @@ export function TopNavbar() {
         />
       </div>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-2 md:gap-3">
         {/* Auto-bet toggle. ON = bet executor places real money on every
             fresh arb alert. Confirmation gate before turning ON. */}
         <div
@@ -93,7 +93,7 @@ export function TopNavbar() {
             : "Auto-bet OFF: dashboard shows arbs but no bets are placed"}
         >
           {autoBet.enabled ? <Zap className="h-3.5 w-3.5" /> : <ZapOff className="h-3.5 w-3.5" />}
-          <span className="text-[11px] font-medium uppercase tracking-wider">
+          <span className="hidden text-[11px] font-medium uppercase tracking-wider sm:inline">
             Auto-bet
           </span>
           <Switch

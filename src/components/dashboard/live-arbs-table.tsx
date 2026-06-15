@@ -123,7 +123,85 @@ export function LiveArbsTable() {
         </Tabs>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile (<md): card layout — a horizontally-scrolling 6-col table is
+          unusable on a phone. Same data, stacked. */}
+      <div className="flex flex-col divide-y divide-border md:hidden">
+        {rows.map((arb) => {
+          const Icon = sportIcon[arb.sport];
+          const ageSec = (now - Date.parse(arb.detectedAt)) / 1000;
+          return (
+            <div key={arb.id} className="flex flex-col gap-3 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{arb.event}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <Badge
+                      variant="outline"
+                      className={
+                        arb.status === "In-Play"
+                          ? "border-destructive/40 text-destructive"
+                          : "border-border text-muted-foreground"
+                      }
+                    >
+                      {arb.status === "In-Play" && (
+                        <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
+                      )}
+                      {arb.status}
+                    </Badge>
+                    {arb.status === "In-Play" && <LiveScoreBadge eventId={arb.eventId} />}
+                    {arb.status === "Pre-match" && fmtKickoff(arb.startTime) && (
+                      <Badge variant="outline" className="gap-1 border-border/60 text-[10px] text-muted-foreground">
+                        <Clock className="h-2.5 w-2.5" />
+                        {fmtKickoff(arb.startTime)}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <span className="shrink-0 font-mono text-lg font-semibold text-primary">
+                  {arb.arbPercent.toFixed(2)}%
+                </span>
+              </div>
+
+              <div className="text-xs text-muted-foreground">{arb.market}</div>
+
+              <div className="flex flex-col gap-1.5">
+                {arb.legs.map((leg, i) => (
+                  <div key={i} className="flex flex-wrap items-center gap-2 text-xs">
+                    <Badge variant="outline" className="h-5 px-1.5 font-mono uppercase border-primary/40 text-primary">
+                      BET&nbsp;@ {leg.bookId}
+                    </Badge>
+                    <span className="truncate font-medium text-foreground" title={leg.outcome}>
+                      {leg.outcome}
+                    </span>
+                    <span className="tabular-nums text-muted-foreground">@ {leg.odds.toFixed(2)}</span>
+                    <span className="tabular-nums font-medium text-foreground">{fmtMoney(leg.stake)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className={`tabular-nums text-xs ${ageColor(ageSec, arb.status === "In-Play")}`}>
+                  {fmtAge(ageSec)}
+                </span>
+                <Button size="sm" onClick={() => { setSelected(arb); setOpen(true); }}>
+                  Calculate
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+        {rows.length === 0 && (
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            No opportunities match this filter.
+          </div>
+        )}
+      </div>
+
+      {/* Desktop (md+): full table. */}
+      <div className="hidden overflow-x-auto md:block">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
