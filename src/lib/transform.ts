@@ -40,6 +40,7 @@ export interface UiArb extends ArbOpportunity {
   profitAbs: number;
   capital: number;
   marketHint: string;
+  flags: string[];
 }
 
 export function transformArb(raw: RawArb): UiArb {
@@ -80,5 +81,6 @@ export function transformArb(raw: RawArb): UiArb {
     profitAbs: raw.profit_abs,
     capital: raw.capital,
     marketHint: raw.market,
+    flags: raw.flags ?? [],
   };
 }

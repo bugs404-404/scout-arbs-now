@@ -46,6 +46,7 @@ export interface RawArb {
   league: string;
   country: string;
   sport: string;
+  flags?: string[];
   legs: RawLeg[];
 }
 

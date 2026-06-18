@@ -166,6 +166,15 @@ export function LiveArbsTable() {
               </div>
 
               <div className="text-xs text-muted-foreground">{arb.market}</div>
+              {arb.flags?.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {arb.flags.map((f) => (
+                    <span key={f} className="rounded bg-warning/15 px-1 py-0.5 text-[9px] font-medium uppercase tracking-wide text-warning">
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               <div className="flex flex-col gap-1.5">
                 {arb.legs.map((leg, i) => (
@@ -263,6 +272,15 @@ export function LiveArbsTable() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {arb.market}
+                    {arb.flags?.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {arb.flags.map((f) => (
+                          <span key={f} className="rounded bg-warning/15 px-1 py-0.5 text-[9px] font-medium uppercase tracking-wide text-warning">
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </TableCell>
 
                   {/* Per-leg stake breakdown — explicitly shows which book
