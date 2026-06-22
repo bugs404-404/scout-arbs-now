@@ -22,7 +22,7 @@ export function ProfitChart() {
   const total = series.length > 0 ? series[series.length - 1].cumulative : 0;
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-border bg-card p-5">
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-5">
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-sm font-semibold">30-Day Profitability</h3>

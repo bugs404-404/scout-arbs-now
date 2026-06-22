@@ -47,7 +47,7 @@ export function TodaysMetrics() {
   const avgMarginPct = summary?.avg_margin_pct ?? 0;
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-border bg-card p-5">
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-5">
       <div>
         <h3 className="text-sm font-semibold">Today's Metrics</h3>
         <p className="text-xs text-muted-foreground">
