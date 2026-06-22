@@ -174,7 +174,7 @@ export function LiveArbsTable() {
               {arb.flags?.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {arb.flags.map((f) => (
-                    <span key={f} className="rounded bg-warning/15 px-1 py-0.5 text-[9px] font-medium uppercase tracking-wide text-warning">
+                    <span key={f} className={`rounded px-1 py-0.5 text-[9px] font-medium uppercase tracking-wide ${f === "offshore" ? "bg-primary/15 text-primary" : "bg-warning/15 text-warning"}`}>
                       {f}
                     </span>
                   ))}
