@@ -160,9 +160,14 @@ export function LiveArbsTable() {
                     )}
                   </div>
                 </div>
-                <span className="shrink-0 font-mono text-lg font-semibold text-primary">
-                  {arb.arbPercent.toFixed(2)}%
-                </span>
+                <div className="flex shrink-0 flex-col items-end leading-none">
+                  <span className="font-mono text-lg font-semibold text-primary">
+                    {arb.arbPercent.toFixed(2)}%
+                  </span>
+                  <span className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                    raw {arb.rawPercent.toFixed(1)}% · net
+                  </span>
+                </div>
               </div>
 
               <div className="text-xs text-muted-foreground">{arb.market}</div>
@@ -218,7 +223,7 @@ export function LiveArbsTable() {
               <TableHead>Market</TableHead>
               <TableHead>Stake distribution (per book)</TableHead>
               <TableHead className="text-right">Detected</TableHead>
-              <TableHead className="text-right">Arb %</TableHead>
+              <TableHead className="text-right">Arb % (net · raw)</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -315,9 +320,14 @@ export function LiveArbsTable() {
                   </TableCell>
 
                   <TableCell className="text-right">
-                    <span className="font-mono text-base font-semibold text-primary">
-                      {arb.arbPercent.toFixed(2)}%
-                    </span>
+                    <div className="flex flex-col items-end leading-none">
+                      <span className="font-mono text-base font-semibold text-primary">
+                        {arb.arbPercent.toFixed(2)}%
+                      </span>
+                      <span className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                        raw {arb.rawPercent.toFixed(1)}%
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button

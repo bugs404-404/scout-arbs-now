@@ -41,6 +41,10 @@ export interface UiArb extends ArbOpportunity {
   capital: number;
   marketHint: string;
   flags: string[];
+  /** PRE-tax margin % (sum of 1/odds over legs). arbPercent is the NET
+   *  (post 12% TZ winnings tax) margin from the backend. Shown side-by-side
+   *  so the operator sees the tax drag (a 13% raw ≈ 6-7% net). */
+  rawPercent: number;
 }
 
 export function transformArb(raw: RawArb): UiArb {
@@ -60,6 +64,11 @@ export function transformArb(raw: RawArb): UiArb {
   // exists (rare/degenerate), mirror it; if 3+ legs, the dialog shows all.
   const leg0 = uiLegs[0];
   const leg1 = uiLegs[1] ?? uiLegs[0];
+
+  // PRE-tax margin from the raw leg odds (no tax). Net = raw.profit_pct.
+  const impliedRaw = uiLegs.reduce(
+    (s, l) => (l.odds > 1 ? s + 1 / l.odds : s), 0);
+  const rawPercent = uiLegs.length ? (1 - impliedRaw) * 100 : raw.profit_pct;
 
   return {
     id: String(raw.id),
@@ -82,5 +91,6 @@ export function transformArb(raw: RawArb): UiArb {
     capital: raw.capital,
     marketHint: raw.market,
     flags: raw.flags ?? [],
+    rawPercent,
   };
 }

@@ -36,17 +36,23 @@ export function ArbCalculatorDialog({ arb, open, onOpenChange }: Props) {
 
   /**
    * Recompute per-leg stakes when the operator changes total stake.
-   * For an N-leg arb with implied probability vector (1/odds_i),
-   *   stake_i = total / (odds_i * sum_implied)
-   * yields the same payout regardless of which leg wins.
+   * Uses EFFECTIVE (post-tax) odds: TZ books withhold 12% on winnings, so the
+   * realisable payout per leg is stake*(1+(odds-1)*0.88). Splitting + payout on
+   * effective odds makes profit/ROI the TRUE net (matches the backend). Offshore
+   * books (stake) are untaxed. Displayed l.odds stays raw (the price placed).
    */
   const computedLegs = useMemo(() => {
     if (!isUiArb(arb) || arb.legs.length === 0) return null;
     const legs = arb.legs;
-    const sumImplied = legs.reduce((s, l) => s + 1 / Math.max(l.odds, 1e-9), 0);
+    const TAX = 0.12;
+    const NO_TAX = new Set(["stake"]);
+    const effOdds = (l: { bookId: string; odds: number }) =>
+      NO_TAX.has(l.bookId) || l.odds <= 1 ? l.odds : 1 + (l.odds - 1) * (1 - TAX);
+    const sumImplied = legs.reduce((s, l) => s + 1 / Math.max(effOdds(l), 1e-9), 0);
     return legs.map((l) => {
-      const stake = total / (l.odds * sumImplied);
-      const payout = stake * l.odds;
+      const eo = effOdds(l);
+      const stake = total / (eo * sumImplied);
+      const payout = stake * eo;        // NET (post-tax) realisable payout
       return { ...l, stake, payout };
     });
   }, [arb, total]);
@@ -107,7 +113,12 @@ export function ArbCalculatorDialog({ arb, open, onOpenChange }: Props) {
               </span>
             )}
             <span className="inline-flex items-center gap-1 font-mono font-semibold text-primary">
-              <Activity className="h-3 w-3" /> {arb.arbPercent.toFixed(3)}%
+              <Activity className="h-3 w-3" /> {arb.arbPercent.toFixed(2)}% net
+              {isUiArb(arb) && (
+                <span className="font-normal text-muted-foreground">
+                  · {arb.rawPercent.toFixed(1)}% raw
+                </span>
+              )}
             </span>
           </DialogDescription>
         </DialogHeader>
