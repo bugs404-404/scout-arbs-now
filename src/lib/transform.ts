@@ -49,7 +49,11 @@ export interface UiArb extends ArbOpportunity {
 
 export function transformArb(raw: RawArb): UiArb {
   const startMs = Date.parse(raw.start_time);
-  const isLive = !Number.isNaN(startMs) && startMs <= Date.now();
+  // TRUE status: the book's is_live flag (start_time disagrees across book
+  // dupes / breaks on late starts) OR'd with kickoff-passed so a prematch arb
+  // still flips In-Play once the game starts.
+  const isLive = raw.is_live === true ||
+    (!Number.isNaN(startMs) && startMs <= Date.now());
 
   const uiLegs: UiLeg[] = (raw.legs ?? []).map((l) => ({
     bookId: l.book_id,

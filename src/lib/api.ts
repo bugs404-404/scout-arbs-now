@@ -43,6 +43,7 @@ export interface RawArb {
   home: string;
   away: string;
   start_time: string;
+  is_live?: boolean;
   league: string;
   country: string;
   sport: string;
