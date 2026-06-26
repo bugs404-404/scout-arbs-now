@@ -32,6 +32,7 @@ export interface RawLeg {
 
 export interface RawArb {
   id: number;
+  key?: string;
   event_id?: number;
   detected_at: string;
   expires_at: string;

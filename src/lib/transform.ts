@@ -75,7 +75,11 @@ export function transformArb(raw: RawArb): UiArb {
   const rawPercent = uiLegs.length ? (1 - impliedRaw) * 100 : raw.profit_pct;
 
   return {
-    id: String(raw.id),
+    // stable identity = arb_key (same across re-detections; the WS close alert
+    // keys on it). Fall back to the numeric id only if key absent. Without this
+    // REST-fetched cards keyed by numeric id never matched arb_closed → zombie
+    // cards stuck showing stale odds (Brazil-Japan).
+    id: raw.key ? String(raw.key) : String(raw.id),
     eventId: typeof raw.event_id === "number" ? raw.event_id : null,
     sport: toSport(raw.sport),
     event: `${raw.home} vs ${raw.away}`,
