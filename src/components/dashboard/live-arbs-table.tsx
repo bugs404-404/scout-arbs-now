@@ -21,10 +21,12 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { type ArbOpportunity, type Sport } from "@/lib/mock-data";
+import type { UiArb } from "@/lib/transform";
 import { useArbs } from "@/hooks/useArbs";
 import { useArbStream } from "@/hooks/useArbStream";
 import { fmtMoney } from "@/lib/format";
 import { ArbCalculatorDialog } from "./arb-calculator-dialog";
+import { PlaceBetDialog } from "./place-bet-dialog";
 import { LiveScoreBadge } from "./live-score-badge";
 
 const sportIcon: Record<Sport, typeof Trophy> = {
@@ -65,6 +67,11 @@ export function LiveArbsTable() {
   const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState<ArbOpportunity | null>(null);
   const [open, setOpen] = useState(false);
+  // Placement is a SEPARATE dialog from the calculator on purpose. The
+  // calculator is a what-if the operator pokes at; Place spends money. Sharing
+  // one dialog would put a fire button inside a scratchpad.
+  const [placing, setPlacing] = useState<UiArb | null>(null);
+  const [placeOpen, setPlaceOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   const { arbs, isLoading, error } = useArbs({ hours: 24, limit: 100 });
@@ -200,9 +207,14 @@ export function LiveArbsTable() {
                 <span className={`tabular-nums text-xs ${ageColor(ageSec, arb.status === "In-Play")}`}>
                   {fmtAge(ageSec)}
                 </span>
-                <Button size="sm" onClick={() => { setSelected(arb); setOpen(true); }}>
-                  Calculate
-                </Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { setSelected(arb); setOpen(true); }}>
+                    Calculate
+                  </Button>
+                  <Button size="sm" onClick={() => { setPlacing(arb); setPlaceOpen(true); }}>
+                    Place
+                  </Button>
+                </div>
               </div>
             </div>
           );
@@ -330,15 +342,27 @@ export function LiveArbsTable() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setSelected(arb);
-                        setOpen(true);
-                      }}
-                    >
-                      Calculate
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelected(arb);
+                          setOpen(true);
+                        }}
+                      >
+                        Calculate
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setPlacing(arb);
+                          setPlaceOpen(true);
+                        }}
+                      >
+                        Place
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -361,6 +385,12 @@ export function LiveArbsTable() {
         arb={selected}
         open={open}
         onOpenChange={setOpen}
+      />
+
+      <PlaceBetDialog
+        arb={placing}
+        open={placeOpen}
+        onOpenChange={setPlaceOpen}
       />
     </div>
   );

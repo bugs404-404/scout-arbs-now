@@ -8,6 +8,9 @@
  *   GET  /api/live
  *   GET  /api/capital
  *   POST /api/capital  { capital: number }
+ *   GET  /api/exec/status
+ *   GET  /api/exec/candidates?limit=100&capital=100
+ *   POST /api/exec/ticket
  *   WS   /ws/arbs   (handled in hooks/useArbStream)
  */
 
@@ -120,6 +123,88 @@ export interface RawBookmaker {
   total_staked: number;
 }
 
+/* ---------- execution (placing a bet) ---------- */
+
+/** One leg as the executor addresses it: the book's OWN ids, not text.
+ *  A leg with a null outcome_id cannot be placed — the extension would have
+ *  to match on a translated label, which is how the wrong selection gets
+ *  backed. The backend refuses those at mint; the UI shows why. */
+export interface RawExecLeg {
+  book_id: string;
+  odds: number;
+  outcome_id: string | null;
+  market_id: string | null;
+  specifier: string | null;
+  book_event_id: string | null;
+  market_raw: string;
+  outcome_raw: string;
+  is_live: boolean;
+}
+
+/** An open arb plus the executor's verdict on it. `blocks` is deliberately
+ *  populated for arbs that CANNOT be placed rather than hiding them: an arb
+ *  that quietly disappears teaches nothing, a blocked one names the rail. */
+export interface RawCandidate {
+  id: number;
+  arb_key: string;
+  raw_pct: number;
+  detector_pct: number;
+  net_pct: number;
+  age_sec: number;
+  is_live: boolean;
+  flags: string[];
+  sport: string;
+  league: string;
+  match: string;
+  market: string;
+  legs: RawExecLeg[];
+  /** per-leg stake preview, decimal strings, aligned with `legs` */
+  stakes: string[];
+  total_stake: string;
+  placeable: boolean;
+  blocks: string[];
+}
+
+export interface RawCandidates {
+  candidates: RawCandidate[];
+  routable: string[];
+  dry_run: boolean;
+  killed: boolean;
+  capital: string;
+}
+
+export interface RawExecStatus {
+  dry_run: boolean;
+  killed: boolean;
+  token_configured: boolean;
+  nodes_online: number;
+  open_tickets: number;
+  reserved_total: number;
+  expired_swept: number;
+}
+
+export interface RawPlacement {
+  leg_index: number;
+  ok: boolean;
+  err?: string | null;
+  bet_id?: string | null;
+  odds?: number | null;
+  stake?: string | null;
+}
+
+/** Result of one Place click. `state` is the ticket's terminal state:
+ *  filled | aborted | half_filled | void. `half_filled` is the expensive one
+ *  — one side landed and the hedge did not — so it carries `unhedged`. */
+export interface RawTicketResult {
+  ok: boolean;
+  state?: string;
+  reason?: string;
+  ticket_id?: number;
+  dry_run?: boolean;
+  placements?: RawPlacement[];
+  unhedged?: unknown;
+}
+
 /* ---------- helpers ---------- */
 
 async function fetchJSON<T>(
@@ -158,6 +243,26 @@ export const api = {
       fetchJSON<{ enabled: boolean }>(`/api/auto_bet`, {
         method: "POST",
         body: JSON.stringify({ enabled }),
+      }),
+  },
+  exec: {
+    status: () => fetchJSON<RawExecStatus>(`/api/exec/status`),
+    /** capital is the BASE the stake preview is computed from. It must be the
+     *  same number `ticket()` posts, or the operator confirms stakes that are
+     *  not the ones placed (mint scales the base up to book minimums). */
+    candidates: (limit = 100, capital = 100) =>
+      fetchJSON<RawCandidates>(
+        `/api/exec/candidates?limit=${limit}&capital=${capital}`),
+    ticket: (body: {
+      arb_key: string;
+      opportunity_id: number | null;
+      legs: RawExecLeg[];
+      capital: number;
+      flags: string[];
+    }) =>
+      fetchJSON<RawTicketResult>(`/api/exec/ticket`, {
+        method: "POST",
+        body: JSON.stringify(body),
       }),
   },
   capital: {
