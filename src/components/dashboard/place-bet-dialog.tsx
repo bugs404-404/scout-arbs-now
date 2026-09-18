@@ -43,16 +43,20 @@ function priceFingerprint(legs: { book_id: string; odds: number }[]): string {
   return legs.map((l) => `${l.book_id}@${l.odds}`).join("|");
 }
 
-function StateBadge({ state }: { state?: string }) {
+function StateBadge({ state, ok }: { state?: string; ok?: boolean }) {
   const tone =
     state === "filled"
       ? "border-success/40 text-success"
       : state === "half_filled"
         ? "border-destructive/60 text-destructive"
         : "border-warning/40 text-warning";
+  // A rail that refuses at mint returns a reason and NO ticket state — there is
+  // no ticket. Labelling that "unknown" read as though something might have
+  // happened; the one thing actually known is that nothing was staked.
+  const label = state ?? (ok === false ? "refused — nothing placed" : "unknown");
   return (
     <Badge variant="outline" className={`font-mono uppercase ${tone}`}>
-      {state ?? "unknown"}
+      {label}
     </Badge>
   );
 }
@@ -62,7 +66,7 @@ function Result({ result }: { result: RawTicketResult }) {
   return (
     <div className="flex flex-col gap-3 text-sm">
       <div className="flex items-center gap-2">
-        <StateBadge state={result.state} />
+        <StateBadge state={result.state} ok={result.ok} />
         {result.ticket_id != null && (
           <span className="font-mono text-xs text-muted-foreground">
             ticket #{result.ticket_id}
