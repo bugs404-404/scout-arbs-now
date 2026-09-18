@@ -68,6 +68,10 @@ export interface RawScraperHealth {
 }
 
 export interface RawStats {
+  /** Server-side freshness rail: an arb that has not re-confirmed within this
+   *  many seconds cannot be placed. 0 = no limit. The board reads it rather
+   *  than hardcoding a threshold the server owns. */
+  max_arb_age_sec?: number;
   summary: {
     total_arbs: number;
     active_arbs: number;
