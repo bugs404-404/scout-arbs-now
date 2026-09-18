@@ -56,12 +56,12 @@ function fmtKickoff(iso: string): string {
   });
 }
 
-function ageColor(seconds: number, isLive: boolean, placeLimit: number): string {
+function ageColor(seconds: number, isLive: boolean, staleAfter: number): string {
   // For a LIVE arb the only threshold that means anything is the executor's:
   // past it the price on the card is not the price at the book and the mint
   // refuses. Colouring against some other number told the operator a card was
   // fine seconds after it had stopped being placeable.
-  const stale = isLive ? (placeLimit > 0 ? placeLimit : 20) : 120;
+  const stale = isLive ? staleAfter : 120;
   if (seconds < stale) return "text-success";
   if (seconds < stale * 2) return "text-warning";
   return "text-destructive";
@@ -80,11 +80,19 @@ export function LiveArbsTable() {
 
   const { arbs, isLoading, error } = useArbs({ hours: 24, limit: 100 });
   const { status: wsStatus } = useArbStream();
-  // The executor's freshness rail, straight from the server.
+  // The executor's freshness rail, straight from the server. When the server
+  // enforces one (> 0) a stale ticket is refused at mint; when it does not,
+  // this is still the age past which a live price has usually moved, so it
+  // drives the WARNING either way.
+  //
+  // It never disables the button. The operator asked to be able to act on any
+  // card, and that is their call to make: the information belongs on screen,
+  // the decision does not belong to the dashboard.
   const { data: stats } = useStats(24);
-  const placeLimit = stats?.max_arb_age_sec ?? 0;
-  const isPlaceable = (arb: UiArb, ageSec: number) =>
-    arb.status !== "In-Play" || placeLimit <= 0 || ageSec <= placeLimit;
+  const enforced = stats?.max_arb_age_sec ?? 0;
+  const staleAfter = enforced > 0 ? enforced : 6;
+  const isFresh = (arb: UiArb, ageSec: number) =>
+    arb.status !== "In-Play" || ageSec <= staleAfter;
 
   // Tick once a second so the "X s ago" column updates without refetching.
   useEffect(() => {
@@ -213,7 +221,7 @@ export function LiveArbsTable() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className={`tabular-nums text-xs ${ageColor(ageSec, arb.status === "In-Play", placeLimit)}`}>
+                <span className={`tabular-nums text-xs ${ageColor(ageSec, arb.status === "In-Play", staleAfter)}`}>
                   {fmtAge(ageSec)}
                 </span>
                 <div className="flex gap-2">
@@ -222,13 +230,13 @@ export function LiveArbsTable() {
                   </Button>
                   <Button
                     size="sm"
-                    disabled={!isPlaceable(arb, ageSec)}
-                    title={isPlaceable(arb, ageSec)
+                    variant={isFresh(arb, ageSec) ? "default" : "outline"}
+                    title={isFresh(arb, ageSec)
                       ? undefined
-                      : `price is ${Math.round(ageSec)}s old — the executor refuses past ${placeLimit}s`}
+                      : `price is ${Math.round(ageSec)}s old — it has probably moved at the book`}
                     onClick={() => { setPlacing(arb); setPlaceOpen(true); }}
                   >
-                    Place
+                    Place{isFresh(arb, ageSec) ? "" : " (stale)"}
                   </Button>
                 </div>
               </div>
@@ -343,7 +351,7 @@ export function LiveArbsTable() {
                   </TableCell>
 
                   {/* Live-ticking age column. Colour reflects freshness. */}
-                  <TableCell className={`text-right tabular-nums text-xs ${ageColor(ageSec, arb.status === "In-Play", placeLimit)}`}>
+                  <TableCell className={`text-right tabular-nums text-xs ${ageColor(ageSec, arb.status === "In-Play", staleAfter)}`}>
                     {fmtAge(ageSec)}
                   </TableCell>
 
@@ -371,16 +379,16 @@ export function LiveArbsTable() {
                       </Button>
                       <Button
                         size="sm"
-                        disabled={!isPlaceable(arb, ageSec)}
-                        title={isPlaceable(arb, ageSec)
+                        variant={isFresh(arb, ageSec) ? "default" : "outline"}
+                        title={isFresh(arb, ageSec)
                           ? undefined
-                          : `price is ${Math.round(ageSec)}s old — the executor refuses past ${placeLimit}s`}
+                          : `price is ${Math.round(ageSec)}s old — it has probably moved at the book`}
                         onClick={() => {
                           setPlacing(arb);
                           setPlaceOpen(true);
                         }}
                       >
-                        Place
+                        Place{isFresh(arb, ageSec) ? "" : " (stale)"}
                       </Button>
                     </div>
                   </TableCell>
