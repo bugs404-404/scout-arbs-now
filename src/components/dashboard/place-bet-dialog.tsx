@@ -35,6 +35,9 @@ interface Props {
   arb: UiArb | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Outcome of a fire that already happened (fast fire from the card). The
+   *  dialog then reports rather than asks — the money has already moved. */
+  presetResult?: RawTicketResult | null;
 }
 
 /** Fingerprint of the prices the operator is agreeing to. Any change in it
@@ -128,9 +131,11 @@ function Result({ result }: { result: RawTicketResult }) {
   );
 }
 
-export function PlaceBetDialog({ arb, open, onOpenChange }: Props) {
+export function PlaceBetDialog({ arb, open, onOpenChange, presetResult }: Props) {
   const { capital } = useCapital();
-  const gate = useExecGate(arb?.id ?? null, capital, open);
+  // A dialog that is only reporting a completed fire must not re-poll the
+  // gate: the answer cannot change anything and the call is not cheap.
+  const gate = useExecGate(arb?.id ?? null, capital, open && !presetResult);
   const place = usePlaceTicket();
   const [armed, setArmed] = useState(false);
   const [result, setResult] = useState<RawTicketResult | null>(null);
@@ -145,11 +150,11 @@ export function PlaceBetDialog({ arb, open, onOpenChange }: Props) {
   useEffect(() => {
     if (open) {
       setArmed(false);
-      setResult(null);
+      setResult(presetResult ?? null);
       place.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, arb?.id]);
+  }, [open, arb?.id, presetResult]);
 
   // The price moved under an armed ticket — drop the arm (see header).
   useEffect(() => {

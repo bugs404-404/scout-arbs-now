@@ -7,6 +7,7 @@ import {
   Snowflake,
   ArrowDown,
   Clock,
+  Zap,
 } from "lucide-react";
 
 import {
@@ -25,6 +26,10 @@ import type { UiArb } from "@/lib/transform";
 import { useArbs } from "@/hooks/useArbs";
 import { useArbStream } from "@/hooks/useArbStream";
 import { useStats } from "@/hooks/useStats";
+import { useCapital } from "@/hooks/useCapital";
+import { useExecBoard, usePlaceTicket } from "@/hooks/useExec";
+import { Switch } from "@/components/ui/switch";
+import type { RawTicketResult } from "@/lib/api";
 import { fmtMoney } from "@/lib/format";
 import { ArbCalculatorDialog } from "./arb-calculator-dialog";
 import { PlaceBetDialog } from "./place-bet-dialog";
@@ -76,6 +81,48 @@ export function LiveArbsTable() {
   // one dialog would put a fire button inside a scratchpad.
   const [placing, setPlacing] = useState<UiArb | null>(null);
   const [placeOpen, setPlaceOpen] = useState(false);
+  // Fast fire: one click on the card mints and commits, no dialog in between.
+  //
+  // Measured on live stat arbs, the helabet leg moves past the 2% abort
+  // tolerance a median of 7.9s after detection — fastest 1.5s — and 2 of 8
+  // suspend outright. Open dialog, read it, arm, confirm does not fit in that
+  // window, which is why most clicks came back "odds moved". This is opt-in
+  // and remembered per browser: it trades the confirmation step for the only
+  // seconds that were actually available to spend.
+  const [fastFire, setFastFire] = useState<boolean>(() => {
+    try { return localStorage.getItem("arb.fastFire") === "1"; } catch { return false; }
+  });
+  const [fireResult, setFireResult] = useState<RawTicketResult | null>(null);
+  const [firingId, setFiringId] = useState<string | null>(null);
+  const { capital } = useCapital();
+  const board = useExecBoard(fastFire, capital);
+  const fire = usePlaceTicket();
+
+  function setFast(on: boolean) {
+    setFastFire(on);
+    try { localStorage.setItem("arb.fastFire", on ? "1" : "0"); } catch { /* ignore */ }
+  }
+
+  async function fireNow(arb: UiArb) {
+    const c = board.byKey.get(arb.id);
+    if (!c) {
+      // No candidate in hand means the executor has nothing to mint from.
+      // Fall back to the dialog, which will say exactly why.
+      setPlacing(arb); setFireResult(null); setPlaceOpen(true);
+      return;
+    }
+    setFiringId(arb.id);
+    const r = await fire
+      .mutateAsync({
+        arb_key: c.arb_key, opportunity_id: c.id, legs: c.legs,
+        capital, flags: c.flags,
+      })
+      .catch((e: Error) => ({ ok: false, reason: e.message }) as RawTicketResult);
+    setFiringId(null);
+    setPlacing(arb);
+    setFireResult(r);          // the dialog now REPORTS instead of asking
+    setPlaceOpen(true);
+  }
   const [now, setNow] = useState(() => Date.now());
 
   const { arbs, isLoading, error } = useArbs({ hours: 24, limit: 100 });
@@ -138,6 +185,14 @@ export function LiveArbsTable() {
                 : "Real-time arbitrage opportunities across connected bookmakers"}
           </p>
         </div>
+        <div className="flex items-center gap-3">
+          <label className="flex cursor-pointer items-center gap-2 text-xs">
+            <Switch checked={fastFire} onCheckedChange={setFast} aria-label="Fast fire" />
+            <span className={fastFire ? "font-medium text-destructive" : "text-muted-foreground"}>
+              <Zap className="mr-1 inline h-3 w-3" />
+              Fast fire
+            </span>
+          </label>
         <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
@@ -145,7 +200,15 @@ export function LiveArbsTable() {
             <TabsTrigger value="live">In-Play</TabsTrigger>
           </TabsList>
         </Tabs>
+        </div>
       </div>
+      {fastFire && (
+        <div className="border-b border-destructive/40 bg-destructive/10 px-4 py-2 text-xs text-destructive md:px-5">
+          <Zap className="mr-1 inline h-3 w-3" />
+          One click on a card places the bet. No confirmation step
+          {board.dryRun ? " (dry run — nothing is staked)" : " and real money moves"}.
+        </div>
+      )}
 
       {/* Mobile (<md): card layout — a horizontally-scrolling 6-col table is
           unusable on a phone. Same data, stacked. */}
@@ -230,13 +293,23 @@ export function LiveArbsTable() {
                   </Button>
                   <Button
                     size="sm"
-                    variant={isFresh(arb, ageSec) ? "default" : "outline"}
+                    variant={fastFire && !board.dryRun
+                      ? "destructive"
+                      : isFresh(arb, ageSec) ? "default" : "outline"}
+                    disabled={firingId === arb.id}
                     title={isFresh(arb, ageSec)
                       ? undefined
                       : `price is ${Math.round(ageSec)}s old — it has probably moved at the book`}
-                    onClick={() => { setPlacing(arb); setPlaceOpen(true); }}
+                    onClick={() => {
+                      if (fastFire) { void fireNow(arb); return; }
+                      setPlacing(arb); setFireResult(null); setPlaceOpen(true);
+                    }}
                   >
-                    Place{isFresh(arb, ageSec) ? "" : " (stale)"}
+                    {firingId === arb.id
+                      ? "Firing…"
+                      : fastFire
+                        ? "Fire"
+                        : `Place${isFresh(arb, ageSec) ? "" : " (stale)"}`}
                   </Button>
                 </div>
               </div>
@@ -379,16 +452,25 @@ export function LiveArbsTable() {
                       </Button>
                       <Button
                         size="sm"
-                        variant={isFresh(arb, ageSec) ? "default" : "outline"}
+                        variant={fastFire && !board.dryRun
+                          ? "destructive"
+                          : isFresh(arb, ageSec) ? "default" : "outline"}
+                        disabled={firingId === arb.id}
                         title={isFresh(arb, ageSec)
                           ? undefined
                           : `price is ${Math.round(ageSec)}s old — it has probably moved at the book`}
                         onClick={() => {
+                          if (fastFire) { void fireNow(arb); return; }
                           setPlacing(arb);
+                          setFireResult(null);
                           setPlaceOpen(true);
                         }}
                       >
-                        Place{isFresh(arb, ageSec) ? "" : " (stale)"}
+                        {firingId === arb.id
+                          ? "Firing…"
+                          : fastFire
+                            ? "Fire"
+                            : `Place${isFresh(arb, ageSec) ? "" : " (stale)"}`}
                       </Button>
                     </div>
                   </TableCell>
@@ -419,6 +501,7 @@ export function LiveArbsTable() {
         arb={placing}
         open={placeOpen}
         onOpenChange={setPlaceOpen}
+        presetResult={fireResult}
       />
     </div>
   );

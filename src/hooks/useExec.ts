@@ -79,6 +79,33 @@ export function useExecGate(
   };
 }
 
+/**
+ * Board-wide gate, for firing straight from a card.
+ *
+ * Measured on live stat arbs: the helabet leg moves past the 2% abort
+ * tolerance a median of 7.9s after detection, and 2 of 8 suspend outright.
+ * Opening a dialog, reading it, arming and confirming does not fit inside
+ * that. Fast fire needs the candidate ALREADY in hand at the moment of the
+ * click, so this polls while it is switched on — and only while it is
+ * switched on, because it re-prices every open arb on each call.
+ */
+export function useExecBoard(enabled: boolean, capital: number) {
+  const q = useQuery({
+    queryKey: ["exec", "candidates", capital],
+    queryFn: () => api.exec.candidates(100, capital),
+    enabled,
+    refetchInterval: enabled ? GATE_REFRESH_MS : false,
+    staleTime: 0,
+  });
+  const byKey = new Map<string, RawCandidate>();
+  for (const c of q.data?.candidates ?? []) byKey.set(c.arb_key, c);
+  return {
+    byKey,
+    dryRun: q.data?.dry_run ?? false,
+    killed: q.data?.killed ?? false,
+  };
+}
+
 /** POST /api/exec/ticket — mint + two-phase commit, in one round trip.
  *
  *  No retry, ever. The idem_key makes a retried PLACEMENT safe at the node,
